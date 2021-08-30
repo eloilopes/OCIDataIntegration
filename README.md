@@ -4,7 +4,7 @@ OCI Data Integration is a serverless ETL tool fully managed by Oracle. Right now
 
 With this script you can connect to an FTP server, pick a file and Upload to OCI Object Storage Bucket, copy the same file to other bucket and delete the file in the end.
 
-Policies that I used to be able to run this script on OCI Data Integration. Before use these policies, check oracle documentation. I'm not responsible for the misuse of these policies in customer environments.
+Policies that I used to be able to run this script on OCI Data Integration. **Before use these policies, check oracle documentation. I'm not responsible for the misuse of these policies in customer environments.**
 
 **Policies for OCI Data Integration**
 https://docs.oracle.com/en-us/iaas/data-integration/using/policies.htm
