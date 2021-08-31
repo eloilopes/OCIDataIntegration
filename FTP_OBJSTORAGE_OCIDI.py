@@ -13,11 +13,34 @@ from io import StringIO
 from io import BytesIO
 from fdk import response
 
-filename = '<your file>'
+filename = 'file name'
 result =""
 storetodir="/tmp"
 
 def handler(ctx, data: io.BytesIO=None):
+    signer = oci.auth.signers.get_resource_principals_signer()
+    try:
+        
+        body = json.loads(data.getvalue())
+    except Exception:
+        raise Exception('Error')
+
+    workspace_id = "ocid1.disworkspace.oc1...."
+    application_key="your application key...."
+    # Get the task id from the event
+    task_key = body.get("data").get("resourceId")
+    dip = oci.data_integration.DataIntegrationClient(config={}, signer=signer)
+    truns = dip.list_task_runs(workspace_id,application_key,aggregator_key=task_key, limit=1)
+    for trun in truns.data.items:
+      task_run_key = trun.key
+
+      tr = dip.get_task_run(workspace_id,application_key, task_run_key=task_run_key)
+      # If not SUCCESS - then this is a no-op
+      if (tr.data.status != "SUCCESS"):
+        resp_data = {"status":"200"}
+        return response.Response(
+            ctx, response_data=resp_data, headers={"Content-Type": "application/json"}
+        )
 
     resp = manageFilesObjStorage()
 
@@ -37,12 +60,12 @@ def progress_callback(bytes_uploaded):
 
 
 def openConnectionFTP():
-    ftp = SmartFTP('<FTP Host or IP>')
+    ftp = SmartFTP('<ip or host>')
     ftp.login('<user>','<password>')
     r = BytesIO()
     os.chdir(storetodir)
     with open(filename, "wb") as file:
-        ftp.retrbinary('RETR /<file>', file.write)
+        ftp.retrbinary('RETR /<file name>', file.write)
 
 
 def manageFilesObjStorage():
@@ -50,9 +73,9 @@ def manageFilesObjStorage():
     signer = oci.auth.signers.get_resource_principals_signer()
     client = oci.object_storage.ObjectStorageClient(config={}, signer=signer)
     namespace = client.get_namespace().data
-    bucket_name = "<Source Bucket>"
-    bucket_name_target ="<Target Bucket>"
-    object_name = "<file>"
+    bucket_name = "<bucket source>"
+    bucket_name_target ="<bucket target>"
+    object_name = "<file name>"
     result = "Uploading new object '" + object_name + "' in bucket '" + bucket_name_target + "'"
     part_size = 2 * MEBIBYTE  # part size (in bytes)
     upload_manager = UploadManager(client, allow_parallel_uploads=True, parallel_process_count=3)
